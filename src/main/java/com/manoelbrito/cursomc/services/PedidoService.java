@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.manoelbrito.cursomc.domain.ItemPedido;
 import com.manoelbrito.cursomc.domain.PagamentoComBoleto;
@@ -13,7 +14,6 @@ import com.manoelbrito.cursomc.domain.enums.EstadoPagamento;
 import com.manoelbrito.cursomc.repositories.ItemPedidoRepository;
 import com.manoelbrito.cursomc.repositories.PagamentoRepository;
 import com.manoelbrito.cursomc.repositories.PedidoRepository;
-import com.manoelbrito.cursomc.repositories.ProdutoRepository;
 import com.manoelbrito.cursomc.services.exception.ObjectNotFoundException;
 
 @Service
@@ -29,7 +29,7 @@ public class PedidoService {
 	private PagamentoRepository pagamentoRepository;
 	
 	@Autowired
-	private ProdutoRepository produtoRepository;
+	private ProdutoService produtoService;
 	
 	@Autowired
 	private ItemPedidoRepository itemPedidoRepository;
@@ -41,7 +41,7 @@ public class PedidoService {
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Pedido.class.getName()));
 		
 	}
-	
+	@Transactional
 	public Pedido insert(Pedido obj) {
 		obj.setId(null);
 		obj.setInstate(new Date());
@@ -57,7 +57,7 @@ public class PedidoService {
 		
 		for(ItemPedido ip: obj.getItens()) {
 			ip.setDesconto(0.0);
-			ip.setPreco(produtoRepository.findById(ip.getProduto().getId()).get().getPreco());
+			ip.setPreco(produtoService.find(ip.getProduto().getId()).getPreco());
 			ip.setPedido(obj);
 			
 			
