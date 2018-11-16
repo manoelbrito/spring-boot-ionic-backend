@@ -13,13 +13,14 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import com.manoelbrito.cursomc.domain.Cliente;
 import com.manoelbrito.cursomc.domain.Pedido;
 
 public abstract class AbstractEmailService implements EmailService {
 
 	@Autowired
 	private TemplateEngine templateEngine;
-	
+
 	@Autowired
 	private JavaMailSender javaMailSender;
 
@@ -50,33 +51,49 @@ public abstract class AbstractEmailService implements EmailService {
 		return templateEngine.process("email/confirmacaoPedido", context);
 
 	}
-	
+
 	@Override
 	public void sendOrderConfirmationHtmlEmail(Pedido obj) {
-	
+
 		try {
-			MimeMessage	mm = prepareMimeMessageFromPedido(obj);
+			MimeMessage mm = prepareMimeMessageFromPedido(obj);
 			sendHtmlEmail(mm);
 		} catch (MessagingException e) {
 			e.printStackTrace();
-			
+
 			sendOrderConfirmationEmail(obj);
 		}
-		
-		
+
 	}
 
 	private MimeMessage prepareMimeMessageFromPedido(Pedido obj) throws MessagingException {
-		MimeMessage mimeMessage=javaMailSender.createMimeMessage();
-		MimeMessageHelper mmH= new MimeMessageHelper(mimeMessage, true);
+		MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+		MimeMessageHelper mmH = new MimeMessageHelper(mimeMessage, true);
 		mmH.setTo(obj.getCliente().getEmail());
 		mmH.setFrom(sender);
 		mmH.setSubject("Pedido confirmado! Código: " + obj.getId());
 		mmH.setSentDate(new Date(System.currentTimeMillis()));
 		mmH.setText(htmlFromTemplatePedido(obj), true);
-		
+
 		return mimeMessage;
 	}
 
-	
+	@Override
+	public void sendNewPasswordEmail(Cliente cliente, String newPass) {
+
+		SimpleMailMessage sm = prepareNewPasswordEmail(cliente, newPass);
+		sendEmail(sm);
+	}
+
+	protected SimpleMailMessage prepareNewPasswordEmail(Cliente cliente, String newPass) {
+		
+		SimpleMailMessage sm = new SimpleMailMessage();
+		sm.setTo(cliente.getEmail());
+		sm.setFrom(sender);
+		sm.setSubject("Solicitação de nova senha");
+		sm.setSentDate(new Date(System.currentTimeMillis()));
+		sm.setText("Nova senha: " + newPass);
+		return sm;
+	}
+
 }
